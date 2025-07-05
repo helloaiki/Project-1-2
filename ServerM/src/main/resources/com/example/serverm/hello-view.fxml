@@ -30,6 +30,7 @@
             </font>
         </Label>
         <Button layoutX="360" layoutY="400" onAction="#startVideoCall" text="Start Video Call" />
+        <Button layoutX="240" layoutY="400" onAction="#endVideoCall" text="Cut Call" />
     </children>
 </AnchorPane>
 

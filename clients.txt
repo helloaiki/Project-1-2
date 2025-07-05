@@ -12,3 +12,5 @@ aw s
 w e
 q w
 s d
+q e
+s s

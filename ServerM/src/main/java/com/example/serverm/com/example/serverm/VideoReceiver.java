@@ -20,13 +20,19 @@ public class VideoReceiver implements Runnable{
         imageView=i;
     }
 
+    private volatile boolean running= true;
+
+    public void stop(){
+        running = false;
+    }
+
     @Override
     public void run (){
         try(ServerSocket serverSocket = new ServerSocket(port)){
             Socket socket= serverSocket.accept();
             InputStream input= socket.getInputStream();
 
-            while(true){
+            while(running){
                 int ln1= input.read();
                 int ln2= input.read();
                 int ln3= input.read();
