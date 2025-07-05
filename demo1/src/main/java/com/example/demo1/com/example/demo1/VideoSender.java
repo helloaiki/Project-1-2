@@ -18,6 +18,12 @@ public class VideoSender implements Runnable{
         port=p;
     }
 
+    private volatile boolean running= true;
+
+    public void stop(){
+        running=false;
+    }
+
     @Override
     public void run(){
         VideoCapture camera= new VideoCapture("video=OBS Virtual Camera", opencv_videoio.CAP_DSHOW);
@@ -30,7 +36,7 @@ public class VideoSender implements Runnable{
         try(Socket socket = new Socket(host,port);
             OutputStream output = socket.getOutputStream()){
 
-            while(camera.read(frame)){
+            while(running && camera.read(frame)){
                 BytePointer buf = new BytePointer();
                 opencv_imgcodecs.imencode(".jpg",frame,buf);
                 byte[] bytes = new byte[(int)buf.limit()];

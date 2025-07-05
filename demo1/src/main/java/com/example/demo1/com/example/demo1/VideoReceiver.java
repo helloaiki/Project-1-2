@@ -1,4 +1,5 @@
 package com.example.demo1;
+import com.example.serverm.VideoSender;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
@@ -20,13 +21,27 @@ public class VideoReceiver implements Runnable{
         imageView=i;
     }
 
+    private volatile boolean running= true;
+    private Socket socket;
+
+    public void stop(){
+        running = false;
+        try{
+            if(socket!=null && !socket.isClosed()){
+                socket.close();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void run (){
         try(ServerSocket serverSocket = new ServerSocket(port)){
-            Socket socket= serverSocket.accept();
+            socket= serverSocket.accept();
             InputStream input= socket.getInputStream();
 
-            while(true){
+            while(running){
                 int ln1= input.read();
                 int ln2= input.read();
                 int ln3= input.read();
@@ -45,6 +60,9 @@ public class VideoReceiver implements Runnable{
 
         } catch(Exception e){
             e.printStackTrace();
+        } finally{
+            Platform.runLater(()->imageView.setImage(null));
         }
+
     }
 }

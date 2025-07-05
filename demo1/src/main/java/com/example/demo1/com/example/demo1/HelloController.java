@@ -142,4 +142,13 @@ public class HelloController implements Initializable {
     private void startVideoCall(){
         CallClient.start(videoView);
     }
+
+    @FXML
+    private void endVideoCall(){
+        CallClient.stop();
+
+        Platform.runLater(()->{
+            videoView.setImage(null);
+        });
+    }
 }
