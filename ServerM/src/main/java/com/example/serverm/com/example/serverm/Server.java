@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Server {
     private ServerSocket serverSocket;
-    private List<ClientArray> clientArrays=new CopyOnWriteArrayList<>();
+    private List<com.example.serverm.ClientArray> clientArrays=new CopyOnWriteArrayList<>();
 
     public Server(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
@@ -25,13 +25,13 @@ public class Server {
                 while (!serverSocket.isClosed())
                 {
                     Socket socket=serverSocket.accept();
-                    ClientArray clientArray=new ClientArray(socket,vBox,clientArrays);
+                    com.example.serverm.ClientArray clientArray=new com.example.serverm.ClientArray(socket,vBox,clientArrays);
                     clientArrays.add(clientArray);
                     new Thread(clientArray).start();
                 }
             }catch (IOException e)
             {
-                 e.printStackTrace();
+                e.printStackTrace();
 
             }
 
@@ -42,7 +42,7 @@ public class Server {
 
     public void broadCastToClients(String messageForAll)
     {
-        for(ClientArray client:clientArrays)
+        for(com.example.serverm.ClientArray client:clientArrays)
         {
             client.sendMessageToClient(messageForAll);
         }
