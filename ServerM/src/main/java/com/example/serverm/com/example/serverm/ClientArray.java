@@ -1,5 +1,6 @@
 package com.example.serverm;
 
+import javafx.application.Platform;
 import javafx.scene.layout.VBox;
 
 import java.io.*;
@@ -132,6 +133,7 @@ public class ClientArray implements Runnable{
         }
     }
 
+
     //listening for messages: blocking operation
     //run will help deal with that
     //adds message we sent to our interface and uses vBox to transmit that to others
@@ -144,6 +146,45 @@ public class ClientArray implements Runnable{
            while((message=bufferedReader.readLine())!=null)
            {
                String messageForAllExceptMe=message;
+
+               if(message.equals("_START_VIDEO_")){
+                   System.out.println("Broadcasting start video command to clients.");
+                   for(ClientArray client: clientArray){
+                       if(client!=this){
+                           client.sendMessageToClient("_START_VIDEO_");
+                       }
+                   }
+                   continue;
+               }
+
+               if(message.equals("_END_VIDEO_")){
+                   System.out.println("Broadcasting end video command to clients.");
+                   for(ClientArray client: clientArray){
+                       if(client!=this){
+                           client.sendMessageToClient("_END_VIDEO_");
+                       }
+                   }
+                   continue;
+               }
+
+               if(message.equals("_VIDEO_CALL_REQUEST_")){
+                   for(ClientArray client:clientArray){
+                       if(client!=this){
+                           client.sendMessageToClient("_VIDEO_CALL_REQUEST_");
+                       }
+                   }
+                   continue;
+               }
+
+               if(message.equals("_REJECT_VIDEO_CALL_")){
+                   for(ClientArray client:clientArray){
+                       if(client!=this){
+                           client.sendMessageToClient("_REJECT_VIDEO_CALL_");
+                       }
+                   }
+                   continue;
+               }
+
                saveMessages(messageForAllExceptMe);
                javafx.application.Platform.runLater(() -> {
                    HelloController.addLabel(messageForAllExceptMe, vBox);

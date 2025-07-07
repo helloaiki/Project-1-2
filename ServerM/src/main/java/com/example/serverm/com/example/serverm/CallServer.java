@@ -1,3 +1,5 @@
+//DON'T NEED IT ANYMORE
+
 package com.example.serverm;
 
 import javafx.scene.image.ImageView;
@@ -7,7 +9,7 @@ public class CallServer {
     private static VideoSender videoSender;
 
     public static void start(ImageView imageView){
-        videoSender = new VideoSender("localhost",5001);
+        videoSender = new VideoSender("localhost", 5001);
         videoThread= new Thread(videoSender);
         videoThread.start();
 

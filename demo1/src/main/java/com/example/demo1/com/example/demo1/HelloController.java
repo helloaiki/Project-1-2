@@ -47,22 +47,26 @@ public class HelloController implements Initializable {
     private AnchorPane ap_main;
     private String name;
     private String password;
-
-    private Client client;
+    private static ImageView videoViewStatic;
+    private static Client client;
+    private static String staticName;
+    private static final String friendIP="192.168.77.4";// It will be the first client's IP address
+    private static final int friendReceivePort=5001;// It will be 5000 for the second client
+    private static final int myReceivePort=5000;// It will be 5001 for the second client
 
 
     @Override
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
         button_send.setDisable(true);
-
+        videoViewStatic=videoView;
         loginButton.setOnAction(event -> {
             name = usernameField.getText().trim();
             password = passwordField.getText().trim();
 
             if (!name.isEmpty() && !password.isEmpty()) {
                 try {
-                    client = new Client(new Socket("localhost", 1234), name, password);
+                    client = new Client(new Socket("localhost", 1234), name, password);//Change the localhost with the ip address of the other computer
 
                     // Start receiving messages only after login
                     if(client!=null)
@@ -119,6 +123,53 @@ public class HelloController implements Initializable {
 
     public static  void addLabel(String messageFromServer,VBox vBox)
     {
+        if(messageFromServer.equals("_VIDEO_CALL_REQUEST_")){
+            Platform.runLater(()->{
+                Alert alert= new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Incoming Video Call");
+                alert.setHeaderText("You have an incoming call.");
+                alert.setContentText("Accept or Reject the call.");
+
+                ButtonType accept= new ButtonType("Accept");
+                ButtonType reject= new ButtonType("Reject");
+                alert.getButtonTypes().setAll(accept,reject);
+
+                alert.showAndWait().ifPresent(response->{
+                    if(response==accept){
+                        client.sendMessageToServer("_START_VIDEO_");
+                        CallClient.start(videoViewStatic,friendIP,friendReceivePort,myReceivePort);
+                    } else{
+                        client.sendMessageToServer("_REJECT_VIDEO_CALL_");
+                    }
+                });
+            });
+            return;
+        }
+
+        if(messageFromServer.equals("_REJECT_VIDEO_CALL_")){
+            Platform.runLater(()->{
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Call Rejected");
+                alert.setHeaderText(null);
+                alert.setContentText("Your video call was rejected");
+                alert.show();
+            });
+            return;
+        }
+
+        if(messageFromServer.equals("_START_VIDEO_")){
+            CallClient.start(videoViewStatic,friendIP,friendReceivePort,myReceivePort);
+            return;
+        }
+
+        if(messageFromServer.equals("_END_VIDEO_")){
+            CallClient.stop();
+            Platform.runLater(()->{
+                videoViewStatic.setImage(null);
+            });
+            return;
+        }
+
         HBox hBox=new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setPadding(new Insets(5,5,5,10));
@@ -138,14 +189,18 @@ public class HelloController implements Initializable {
         });
 
     }
+
+
     @FXML
     private void startVideoCall(){
-        CallClient.start(videoView);
+        client.sendMessageToServer("_VIDEO_CALL_REQUEST_");
+        //CallClient.start(videoView,friendIP,friendReceivePort,myReceivePort);
     }
 
     @FXML
     private void endVideoCall(){
         CallClient.stop();
+        client.sendMessageToServer("_END_VIDEO_");
 
         Platform.runLater(()->{
             videoView.setImage(null);

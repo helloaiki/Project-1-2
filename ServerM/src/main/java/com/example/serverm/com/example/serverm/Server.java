@@ -12,6 +12,7 @@ public class Server {
     private ServerSocket serverSocket;
     private List<ClientArray> clientArrays=new CopyOnWriteArrayList<>();
 
+
     public Server(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
     }
@@ -32,14 +33,12 @@ public class Server {
             }catch (IOException e)
             {
                  e.printStackTrace();
-
             }
 
         }).start();
     }
 
     //this function is for saying which client left and joined etc
-
     public void broadCastToClients(String messageForAll)
     {
         for(ClientArray client:clientArrays)
@@ -47,7 +46,5 @@ public class Server {
             client.sendMessageToClient(messageForAll);
         }
     }
-
-
 }
 

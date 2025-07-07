@@ -1,3 +1,5 @@
+//DON'T NEED IT ANYMORE
+
 package com.example.serverm;
 
 import org.bytedeco.javacpp.BytePointer;
@@ -8,6 +10,8 @@ import org.bytedeco.opencv.global.opencv_videoio;
 
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VideoSender implements Runnable{
     private final String host;
@@ -28,11 +32,15 @@ public class VideoSender implements Runnable{
     @Override
     public void run(){
 
+        System.out.println("VideoSender started");
         if(!camera.isOpened()){
             System.out.println("Cannot open webcam");
             return;
         }
+        System.out.println("Webcam opened successfully");
         Mat frame= new Mat();
+        List<Socket> sockets= new ArrayList<>();
+        List<OutputStream> outputs = new ArrayList<>();
 
         try(Socket socket = new Socket(host,port);
             OutputStream output = socket.getOutputStream()){
@@ -50,11 +58,10 @@ public class VideoSender implements Runnable{
                     output.write(bytes.length & 0xFF);
                     output.write(bytes);
                     output.flush();
-                }catch(Exception e){
+                }catch(Exception e) {
                     System.out.println("Client disconnected. Stopping video sender.");
                     break;
                 }
-
                 Thread.sleep(33);
             }
         } catch(Exception e){
@@ -62,6 +69,7 @@ public class VideoSender implements Runnable{
         } finally{
             camera.release();
             System.out.println("Camera released");
+
         }
 
     }

@@ -12,7 +12,7 @@ import java.net.Socket;
 public class VideoSender implements Runnable{
     private final String host;
     private final int port;
-
+    VideoCapture camera= new VideoCapture(0, opencv_videoio.CAP_DSHOW);
     public VideoSender(String h, int p){
         host=h;
         port=p;
@@ -22,11 +22,12 @@ public class VideoSender implements Runnable{
 
     public void stop(){
         running=false;
+        camera.release();
     }
 
     @Override
     public void run(){
-        VideoCapture camera= new VideoCapture("video=OBS Virtual Camera", opencv_videoio.CAP_DSHOW);
+
         if(!camera.isOpened()){
             System.out.println("Cannot open webcam");
             return;
@@ -53,6 +54,10 @@ public class VideoSender implements Runnable{
             }
         } catch(Exception e){
             e.printStackTrace();
+        }finally{
+            camera.release();
+            System.out.println("Camera released");
+
         }
 
     }
