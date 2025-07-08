@@ -50,19 +50,29 @@ public class HelloController implements Initializable {
     private static ImageView videoViewStatic;
     private static Client client;
     private static String staticName;
-    private static final String friendIP="192.168.77.4";// It will be the first client's IP address
-    private static final int friendReceivePort=5001;// It will be 5000 for the second client
-    private static final int myReceivePort=5000;// It will be 5001 for the second client
+    private static final String friendIP="192.168.77.4";  // It will be the first client's IP address
+    private static final int friendReceivePort=5001;  // It will be 5000 for the second client
+    private static final int myReceivePort=5000;  // It will be 5001 for the second client
+    private Thread audioSenderThread;
+    private Thread audioReceiverThread;
+    private AudioSender audioSender;
+    private AudioReceiver audioReceiver;
+    private final String friendAudioIP= "192.168.77.4";  // It will be the first client's IP address
+    private final int myAudioPort= 5555;  //It will be 6666 for the second client
+    private final int friendAudioPort=6666;  //It will be 5555 for the second client
 
+    private static HelloController instance;
 
     @Override
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        instance=this;
         button_send.setDisable(true);
         videoViewStatic=videoView;
         loginButton.setOnAction(event -> {
             name = usernameField.getText().trim();
             password = passwordField.getText().trim();
+            staticName=name;
 
             if (!name.isEmpty() && !password.isEmpty()) {
                 try {
@@ -121,17 +131,88 @@ public class HelloController implements Initializable {
 
     }
 
+    public static HelloController getInstance(){
+        return instance;
+    }
+
+    private void stopAudioCall(){
+        if(audioSender!=null) audioSender.stop();
+        if(audioReceiver!=null) audioReceiver.stop();
+
+        if(audioSenderThread!=null) audioSenderThread.interrupt();
+        if(audioReceiverThread!=null) audioReceiverThread.interrupt();
+    }
+
+    private void startAudioCall(){
+        stopAudioCall();
+        audioSender= new AudioSender(friendAudioIP, friendAudioPort);
+        audioReceiver = new AudioReceiver(myAudioPort);
+
+        audioSenderThread = new Thread(audioSender);
+        audioReceiverThread = new Thread(audioReceiver);
+
+        audioSenderThread.start();
+        audioReceiverThread.start();
+    }
+
     public static  void addLabel(String messageFromServer,VBox vBox)
     {
+        if(messageFromServer.startsWith("AUDIO_CALL_REQUEST|")){
+            String caller= messageFromServer.split("\\|")[1];
+            Platform.runLater(()->{
+                Alert alert= new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Incoming Audio Call");
+                alert.setHeaderText("Audio call from "+caller);
+                alert.setContentText("Accept or Reject?");
+
+                ButtonType accept= new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
+                ButtonType reject= new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
+                alert.getButtonTypes().setAll(accept,reject);
+
+                alert.showAndWait().ifPresent(response->{
+                    if(response==accept){
+                        client.sendMessageToServer("AUDIO_CALL_ACCEPT|"+staticName);
+                        //startAudioCall();
+                    } else {
+                        client.sendMessageToServer("AUDIO_CALL_REJECT|"+staticName);
+                    }
+                });
+            });
+            return;
+        }
+
+        if(messageFromServer.startsWith("AUDIO_CALL_ACCEPT|")){
+            Platform.runLater(()->{
+                HelloController.getInstance().startAudioCall();
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setTitle("Audio Call");
+                info.setHeaderText(null);
+                info.setContentText("Call accepted.");
+                info.show();
+            });
+            return;
+        }
+
+        if(messageFromServer.startsWith("AUDIO_CALL_REJECT|")){
+            Platform.runLater(()->{
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setTitle("Audio Call");
+                info.setHeaderText(null);
+                info.setContentText("Call rejected.");
+                info.show();
+            });
+            return;
+        }
+
         if(messageFromServer.equals("_VIDEO_CALL_REQUEST_")){
             Platform.runLater(()->{
                 Alert alert= new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Incoming Video Call");
                 alert.setHeaderText("You have an incoming call.");
-                alert.setContentText("Accept or Reject the call.");
+                alert.setContentText("Accept or Reject the call?");
 
-                ButtonType accept= new ButtonType("Accept");
-                ButtonType reject= new ButtonType("Reject");
+                ButtonType accept= new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
+                ButtonType reject= new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
                 alert.getButtonTypes().setAll(accept,reject);
 
                 alert.showAndWait().ifPresent(response->{
@@ -159,11 +240,13 @@ public class HelloController implements Initializable {
 
         if(messageFromServer.equals("_START_VIDEO_")){
             CallClient.start(videoViewStatic,friendIP,friendReceivePort,myReceivePort);
+            HelloController.getInstance().startAudioCall();
             return;
         }
 
         if(messageFromServer.equals("_END_VIDEO_")){
             CallClient.stop();
+            HelloController.getInstance().stopAudioCall();
             Platform.runLater(()->{
                 videoViewStatic.setImage(null);
             });
@@ -205,5 +288,17 @@ public class HelloController implements Initializable {
         Platform.runLater(()->{
             videoView.setImage(null);
         });
+    }
+
+    @FXML
+    private void handleAudioCall(){
+        if(client!=null){
+            client.sendMessageToServer("AUDIO_CALL_REQUEST|"+name);
+        }
+    }
+
+    @FXML
+    private void handleEndAudioCall(){
+        startAudioCall();
     }
 }

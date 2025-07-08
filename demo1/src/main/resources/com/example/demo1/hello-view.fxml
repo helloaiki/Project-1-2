@@ -28,7 +28,9 @@
         </Label>
         <ImageView fx:id="videoView" fitHeight="462.0" fitWidth="498.0" layoutX="46.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0"/>
         <Button layoutX="360" layoutY="400" onAction="#startVideoCall" text="Start Video Call" />
-        <Button layoutX="240" layoutY="400" onAction="#endVideoCall" text="Cut Call" />
+        <Button layoutX="240" layoutY="400" onAction="#endVideoCall" text="End Video Call" />
+        <Button fx:id="button_audio_call" layoutX="120" layoutY="400" onAction="#handleAudioCall" text="Start Audio Call"/>
+        <Button fx:id="button_end_audio" layoutX="0" layoutY="400" onAction="#handleEndAudioCall" text="End Audio Call"/>
       <VBox fx:id="loginPane" alignment="CENTER" layoutX="-3.0" prefHeight="461.0" prefWidth="500.0" spacing="10" style="-fx-background-color: white;">
       <children>
           <Label style="-fx-font-size: 20px; -fx-text-fill: black;" text="Login / Register" />
