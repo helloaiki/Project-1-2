@@ -185,6 +185,24 @@ public class ClientArray implements Runnable{
                    continue;
                }
 
+               if(message.startsWith("AUDIO_CALL_REQUEST")){
+                   for(ClientArray client:clientArray){
+                       if(client!=this){
+                           client.sendMessageToClient(message);
+                       }
+                   }
+                   continue;
+               }
+
+               if(message.startsWith("AUDIO_CALL_ACCEPT|") || message.startsWith("AUDIO_CALL_REJECT|")){
+                   for(ClientArray client:clientArray){
+                       if(client!=this){
+                           client.sendMessageToClient(message);
+                       }
+                   }
+                   continue;
+               }
+
                saveMessages(messageForAllExceptMe);
                javafx.application.Platform.runLater(() -> {
                    HelloController.addLabel(messageForAllExceptMe, vBox);
