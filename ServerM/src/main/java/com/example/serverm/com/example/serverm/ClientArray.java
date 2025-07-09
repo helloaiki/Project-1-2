@@ -221,6 +221,7 @@ public class ClientArray implements Runnable{
             {
                 String messageForAllExceptMe=message;
                 saveMessages(messageForAllExceptMe);
+                //video part
                 javafx.application.Platform.runLater(() -> {
                     com.example.serverm.HelloController.addLabel(messageForAllExceptMe, vBox);
                 });
