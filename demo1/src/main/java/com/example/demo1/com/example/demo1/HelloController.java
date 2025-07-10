@@ -50,14 +50,14 @@ public class HelloController implements Initializable {
     private static ImageView videoViewStatic;
     private static Client client;
     private static String staticName;
-    private static final String friendIP="127.0.0.1";  // It will be the first client's IP address 192.168.77.4
+    private static final String friendIP="192.168.77.4";  // It will be the first client's IP address 192.168.77.4
     private static final int friendReceivePort=5000;  // It will be 5000 for the second client
     private static final int myReceivePort=5001;  // It will be 5001 for the second client
     private Thread audioSenderThread;
     private Thread audioReceiverThread;
     private AudioSender audioSender;
     private AudioReceiver audioReceiver;
-    private final String friendAudioIP= "127.0.0.1";  // It will be the first client's IP address
+    private final String friendAudioIP= "192.168.77.4";  // It will be the first client's IP address
     private final int myAudioPort= 5555;  //It will be 6666 for the second client
     private final int friendAudioPort=6666;  //It will be 5555 for the second client
     private static RingtonePlayer ringtonePlayer= new RingtonePlayer();
