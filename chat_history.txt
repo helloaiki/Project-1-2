@@ -24,3 +24,7 @@ hey
 hi
 hello
 hi
+hey
+hi
+how are you
+fine thanks

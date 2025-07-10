@@ -30,8 +30,6 @@ public class HelloController implements Initializable {
     private VBox vBox_messages;
     @FXML
     private ScrollPane sp_main;
-    @FXML
-    private static ImageView videoViewStatic;
 
 
     private Server server;
@@ -42,7 +40,7 @@ public class HelloController implements Initializable {
 
 
          //Start the server in a background thread
-        videoViewStatic= videoView;
+
         new Thread(() -> {
             try {
                 server = new Server(new ServerSocket(1234));
@@ -120,20 +118,15 @@ public class HelloController implements Initializable {
     @FXML
     private void startVideoCall(){
         CallServer.start(videoView);
-        server.broadCastToClients("_START_VIDEO_");
     }
 
     @FXML
     private void endVideoCall(){
         CallServer.stop();
-        server.broadCastToClients("_END_VIDEO_");
+
         Platform.runLater(()->{
             videoView.setImage(null);
         });
-    }
-
-    public static ImageView getVideoView(){
-        return videoViewStatic;
     }
 
 }

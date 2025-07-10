@@ -26,17 +26,28 @@ public class ClientArray implements Runnable{
             String userNamePassWordCombo=bufferedReader.readLine();
             String[]credentials=userNamePassWordCombo.split(" ");
             userName=credentials[0];
-            if(!validUser(credentials[0],credentials[1]))
+            if(checkForDuplicateUser(credentials[0],credentials[1]))
             {
-                 bufferedWriter.write("Unsuccessful login");
-                 bufferedWriter.newLine();
-                 bufferedWriter.flush();
-                 closeEverything(socket,bufferedReader,bufferedWriter);
-                 return;
+                bufferedWriter.write("Duplicate username");
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
             }
-            bufferedWriter.write("Successful login");
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
+            else
+            {
+                if(!validUser(credentials[0],credentials[1]))
+                {
+                    bufferedWriter.write("Unsuccessful login");
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
+                    closeEverything(socket,bufferedReader,bufferedWriter);
+                    return;
+                }
+                bufferedWriter.write("Successful login");
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
+                //here we will send the file text by text to the client as login was a success
+                sendClientAvailable();
+            }
 
         }
         catch(IOException e)
@@ -45,6 +56,39 @@ public class ClientArray implements Runnable{
             e.printStackTrace();
             closeEverything(socket,bufferedReader,bufferedWriter);
         }
+    }
+
+    private boolean checkForDuplicateUser(String name,String pw)
+    {
+        File file=new File("clients.txt");
+        try
+        {
+            if(!file.exists())
+            {
+                //if file doesn't exist yet, it returns false,so that the call goes to validUser
+                return false;
+            }
+            BufferedReader br=new BufferedReader(new FileReader(file));
+            String matcher;
+            //checks for a previous user
+            while((matcher=br.readLine())!=null)
+            {
+                String namePartFromClientFile=matcher.split(" ")[0];
+                String passwordPart=matcher.split(" ")[1];
+                if(namePartFromClientFile.equalsIgnoreCase(name) && !passwordPart.equals(pw))
+                {
+                    return true;
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            System.out.println("Error in client reg part");
+            e.printStackTrace();
+            return false;
+        }
+        //if it ever reaches this point, then that username is new or user used proper credentials
+        return false;
     }
 
     private boolean validUser(String name,String password)
@@ -85,15 +129,46 @@ public class ClientArray implements Runnable{
 
     private void giveEntryToNewUser(String name,String password)
     {
-       try
-       {
-           FileWriter fw=new FileWriter("clients.txt",true);
-           fw.write(name+" "+password+"\n");
-           fw.close();
-       } catch (IOException e) {
-           System.out.println("Error in appending new client to file");
-           e.printStackTrace();
-       }
+        try
+        {
+            FileWriter fw=new FileWriter("clients.txt",true);
+            fw.write(name+" "+password+"\n");
+            fw.close();
+        } catch (IOException e) {
+            System.out.println("Error in appending new client to file");
+            e.printStackTrace();
+        }
+    }
+
+    private void sendClientAvailable()
+    {
+        try
+        {
+            File file=new File("clients.txt");
+            if(!file.exists())
+                return;
+            BufferedReader br=new BufferedReader(new FileReader(file));
+            String linePicker;
+            bufferedWriter.write("USER_INFORMATION_S");
+            bufferedWriter.newLine();
+            while((linePicker=br.readLine())!=null)
+            {
+                String name=linePicker.split(" ")[0];
+                bufferedWriter.write(name);
+                bufferedWriter.newLine();
+            }
+            bufferedWriter.write("USER_INFORMATION_E");
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
+            br.close();
+        }
+        catch(IOException e)
+        {
+            System.out.println("Error in sending across client list info");
+            e.printStackTrace();
+            closeEverything(socket,bufferedReader,bufferedWriter);
+        }
+
     }
 
     //sends messages to server via bufferWriter

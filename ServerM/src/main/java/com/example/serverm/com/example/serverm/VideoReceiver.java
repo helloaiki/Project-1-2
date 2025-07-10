@@ -1,5 +1,3 @@
-//DON'T NEED IT ANYMORE
-
 package com.example.serverm;
 
 import javafx.application.Platform;

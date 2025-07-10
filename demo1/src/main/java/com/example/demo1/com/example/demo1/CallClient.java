@@ -8,7 +8,7 @@ public class CallClient {
     private static VideoSender videoSender;
 
     public static void start(ImageView imageView, String remoteIP, int remotePort, int myPort){
-       videoSender= new VideoSender(remoteIP,remotePort);
+        videoSender= new VideoSender(remoteIP,remotePort);
         videoReceiver = new VideoReceiver(myPort,imageView);
 
         videoThreadSender = new Thread(videoSender);
