@@ -1,5 +1,4 @@
 package com.example.demo1;
-import com.example.serverm.VideoSender;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
