@@ -15,6 +15,7 @@ module com.example.demo1 {
     requires javafx.swing;
     requires com.example.serverm;
     requires com.fasterxml.jackson.core;
+    requires javafx.media;
 
     opens com.example.demo1 to javafx.fxml;
     exports com.example.demo1;

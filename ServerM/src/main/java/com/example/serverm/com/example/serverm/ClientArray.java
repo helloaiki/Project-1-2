@@ -147,39 +147,43 @@ public class ClientArray implements Runnable{
            {
                String messageForAllExceptMe=message;
 
-               if(message.equals("_START_VIDEO_")){
+               if(message.startsWith("_START_VIDEO_|")){
                    System.out.println("Broadcasting start video command to clients.");
                    for(ClientArray client: clientArray){
                        if(client!=this){
-                           client.sendMessageToClient("_START_VIDEO_");
+                           client.sendMessageToClient(message);
                        }
                    }
                    continue;
                }
 
-               if(message.equals("_END_VIDEO_")){
+               if(message.startsWith("_END_VIDEO_|")){
                    System.out.println("Broadcasting end video command to clients.");
                    for(ClientArray client: clientArray){
                        if(client!=this){
-                           client.sendMessageToClient("_END_VIDEO_");
+                           client.sendMessageToClient(message);
+                       }
+                   }
+
+                   for(ClientArray client:clientArray){
+                           client.sendMessageToClient("END_AUDIO");
+                   }
+                   continue;
+               }
+
+               if(message.startsWith("_VIDEO_CALL_REQUEST_|")){
+                   for(ClientArray client:clientArray){
+                       if(client!=this){
+                           client.sendMessageToClient(message);
                        }
                    }
                    continue;
                }
 
-               if(message.equals("_VIDEO_CALL_REQUEST_")){
+               if(message.startsWith("_REJECT_VIDEO_CALL_|")){
                    for(ClientArray client:clientArray){
                        if(client!=this){
-                           client.sendMessageToClient("_VIDEO_CALL_REQUEST_");
-                       }
-                   }
-                   continue;
-               }
-
-               if(message.equals("_REJECT_VIDEO_CALL_")){
-                   for(ClientArray client:clientArray){
-                       if(client!=this){
-                           client.sendMessageToClient("_REJECT_VIDEO_CALL_");
+                           client.sendMessageToClient(message);
                        }
                    }
                    continue;
@@ -203,10 +207,20 @@ public class ClientArray implements Runnable{
                    continue;
                }
 
+               if(message.startsWith("END_AUDIO_CALL|")){
+                   System.out.println("Broadcasting end audio command to clients.");
+                   for(ClientArray client:clientArray) {
+                       if (client != this) {
+                           client.sendMessageToClient(message);
+                       }
+                   }
+                   continue;
+               }
+
                saveMessages(messageForAllExceptMe);
-               javafx.application.Platform.runLater(() -> {
+               /*Platform.runLater(() -> {
                    HelloController.addLabel(messageForAllExceptMe, vBox);
-               });
+               });*/
                for (ClientArray client : clientArray) {
                    if (client != this)
                    {
@@ -221,7 +235,6 @@ public class ClientArray implements Runnable{
            e.printStackTrace();
            closeEverything(socket,bufferedReader,bufferedWriter);
        }
-
     }
 
     public void saveMessages(String message)

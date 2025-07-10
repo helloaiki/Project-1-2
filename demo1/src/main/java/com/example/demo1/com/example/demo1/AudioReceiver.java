@@ -28,12 +28,15 @@ public class AudioReceiver implements Runnable {
             speakers.start();
 
             DatagramSocket socket = new DatagramSocket(port);
+            System.out.println("Listening on port: "+port);
             byte[] buffer = new byte[4096];
 
             while (running) {
                 DatagramPacket packet = new DatagramPacket(buffer, 0, buffer.length);
                 socket.receive(packet);
+                System.out.println("Received "+packet.getLength()+" bytes from "+packet.getAddress());
                 speakers.write(packet.getData(), 0, packet.getLength());
+                System.out.println("Playing "+packet.getLength()+" bytes");
             }
 
             speakers.drain();

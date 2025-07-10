@@ -36,9 +36,12 @@ public class AudioSender implements Runnable{
             byte[] buffer = new byte[4096];
             while(running){
                 int count = microphone.read(buffer, 0, buffer.length);
+                System.out.println("Read "+count+" bytes from microphone");
+
                 if(count>0){
                     DatagramPacket packet = new DatagramPacket(buffer,count,address,port);
                     socket.send(packet);
+                    System.out.println("Sent "+count+" bytes to "+serverIP+":"+port);
                 }
             }
 

@@ -50,17 +50,17 @@ public class HelloController implements Initializable {
     private static ImageView videoViewStatic;
     private static Client client;
     private static String staticName;
-    private static final String friendIP="192.168.77.4";  // It will be the first client's IP address
-    private static final int friendReceivePort=5001;  // It will be 5000 for the second client
-    private static final int myReceivePort=5000;  // It will be 5001 for the second client
+    private static final String friendIP="127.0.0.1";  // It will be the first client's IP address 192.168.77.4
+    private static final int friendReceivePort=5000;  // It will be 5000 for the second client
+    private static final int myReceivePort=5001;  // It will be 5001 for the second client
     private Thread audioSenderThread;
     private Thread audioReceiverThread;
     private AudioSender audioSender;
     private AudioReceiver audioReceiver;
-    private final String friendAudioIP= "192.168.77.4";  // It will be the first client's IP address
+    private final String friendAudioIP= "127.0.0.1";  // It will be the first client's IP address
     private final int myAudioPort= 5555;  //It will be 6666 for the second client
     private final int friendAudioPort=6666;  //It will be 5555 for the second client
-
+    private static RingtonePlayer ringtonePlayer= new RingtonePlayer();
     private static HelloController instance;
 
     @Override
@@ -139,8 +139,23 @@ public class HelloController implements Initializable {
         if(audioSender!=null) audioSender.stop();
         if(audioReceiver!=null) audioReceiver.stop();
 
-        if(audioSenderThread!=null) audioSenderThread.interrupt();
-        if(audioReceiverThread!=null) audioReceiverThread.interrupt();
+        if(audioSenderThread!=null && audioSenderThread.isAlive()) {
+            audioSenderThread.interrupt();
+            try{
+                audioSenderThread.join(3000);
+            }catch(InterruptedException e){e.printStackTrace();}
+            audioSenderThread=null;
+        }
+        if(audioReceiverThread!=null && audioReceiverThread.isAlive()) {
+            audioReceiverThread.interrupt();
+            try{
+                audioReceiverThread.join(3000);
+            }catch (InterruptedException e){e.printStackTrace();}
+            audioReceiverThread=null;
+        }
+
+        audioSender=null;
+        audioReceiver=null;
     }
 
     private void startAudioCall(){
@@ -160,6 +175,7 @@ public class HelloController implements Initializable {
         if(messageFromServer.startsWith("AUDIO_CALL_REQUEST|")){
             String caller= messageFromServer.split("\\|")[1];
             Platform.runLater(()->{
+                ringtonePlayer.play();
                 Alert alert= new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Incoming Audio Call");
                 alert.setHeaderText("Audio call from "+caller);
@@ -170,9 +186,10 @@ public class HelloController implements Initializable {
                 alert.getButtonTypes().setAll(accept,reject);
 
                 alert.showAndWait().ifPresent(response->{
+                    ringtonePlayer.stop();
                     if(response==accept){
                         client.sendMessageToServer("AUDIO_CALL_ACCEPT|"+staticName);
-                        //startAudioCall();
+                        HelloController.getInstance().startAudioCall();
                     } else {
                         client.sendMessageToServer("AUDIO_CALL_REJECT|"+staticName);
                     }
@@ -204,11 +221,31 @@ public class HelloController implements Initializable {
             return;
         }
 
-        if(messageFromServer.equals("_VIDEO_CALL_REQUEST_")){
+        if(messageFromServer.startsWith("END_AUDIO_CALL|")){
+            HelloController.getInstance().stopAudioCall();
+            String caller= messageFromServer.split("\\|")[1];
             Platform.runLater(()->{
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Audio Call");
+                alert.setHeaderText(null);
+                alert.setContentText(caller+" has ended the audio call.");
+                    alert.show();
+            });
+            return;
+        }
+
+        if(messageFromServer.equals("END_AUDIO")){
+            HelloController.getInstance().stopAudioCall();
+            return;
+        }
+
+        if(messageFromServer.startsWith("_VIDEO_CALL_REQUEST_|")){
+            String caller= messageFromServer.split("\\|")[1];
+            Platform.runLater(()->{
+                ringtonePlayer.play();
                 Alert alert= new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Incoming Video Call");
-                alert.setHeaderText("You have an incoming call.");
+                alert.setHeaderText("Video call from "+caller);
                 alert.setContentText("Accept or Reject the call?");
 
                 ButtonType accept= new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
@@ -216,18 +253,19 @@ public class HelloController implements Initializable {
                 alert.getButtonTypes().setAll(accept,reject);
 
                 alert.showAndWait().ifPresent(response->{
+                    ringtonePlayer.stop();
                     if(response==accept){
-                        client.sendMessageToServer("_START_VIDEO_");
+                        client.sendMessageToServer("_START_VIDEO_|"+staticName);
                         CallClient.start(videoViewStatic,friendIP,friendReceivePort,myReceivePort);
                     } else{
-                        client.sendMessageToServer("_REJECT_VIDEO_CALL_");
+                        client.sendMessageToServer("_REJECT_VIDEO_CALL_|"+staticName);
                     }
                 });
             });
             return;
         }
 
-        if(messageFromServer.equals("_REJECT_VIDEO_CALL_")){
+        if(messageFromServer.startsWith("_REJECT_VIDEO_CALL_|")){
             Platform.runLater(()->{
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Call Rejected");
@@ -238,17 +276,23 @@ public class HelloController implements Initializable {
             return;
         }
 
-        if(messageFromServer.equals("_START_VIDEO_")){
+        if(messageFromServer.startsWith("_START_VIDEO_|")){
             CallClient.start(videoViewStatic,friendIP,friendReceivePort,myReceivePort);
             HelloController.getInstance().startAudioCall();
             return;
         }
 
-        if(messageFromServer.equals("_END_VIDEO_")){
+        if(messageFromServer.startsWith("_END_VIDEO_|")){
             CallClient.stop();
             HelloController.getInstance().stopAudioCall();
+            String caller= messageFromServer.split("\\|")[1];
             Platform.runLater(()->{
                 videoViewStatic.setImage(null);
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Video Call");
+                alert.setHeaderText(null);
+                alert.setContentText(caller+" has ended the video call.");
+                alert.show();
             });
             return;
         }
@@ -276,14 +320,14 @@ public class HelloController implements Initializable {
 
     @FXML
     private void startVideoCall(){
-        client.sendMessageToServer("_VIDEO_CALL_REQUEST_");
+        client.sendMessageToServer("_VIDEO_CALL_REQUEST_|"+name);
         //CallClient.start(videoView,friendIP,friendReceivePort,myReceivePort);
     }
 
     @FXML
     private void endVideoCall(){
         CallClient.stop();
-        client.sendMessageToServer("_END_VIDEO_");
+        client.sendMessageToServer("_END_VIDEO_|"+name);
 
         Platform.runLater(()->{
             videoView.setImage(null);
@@ -291,7 +335,7 @@ public class HelloController implements Initializable {
     }
 
     @FXML
-    private void handleAudioCall(){
+    private void handleStartAudioCall(){
         if(client!=null){
             client.sendMessageToServer("AUDIO_CALL_REQUEST|"+name);
         }
@@ -299,6 +343,9 @@ public class HelloController implements Initializable {
 
     @FXML
     private void handleEndAudioCall(){
-        startAudioCall();
+        if(audioSender!=null || audioReceiver!=null){
+            stopAudioCall();
+            client.sendMessageToServer("END_AUDIO_CALL|"+name);
+        }
     }
 }
