@@ -13,6 +13,7 @@ module com.example.serverm {
     requires org.bytedeco.javacpp;
     requires org.bytedeco.opencv;
     requires javafx.swing;
+    requires java.sql;
 
     opens com.example.serverm to javafx.fxml;
     exports com.example.serverm;

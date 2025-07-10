@@ -1,6 +1,5 @@
 package com.example.serverm;
 
-import javafx.application.Platform;
 import javafx.scene.layout.VBox;
 
 import java.io.*;
