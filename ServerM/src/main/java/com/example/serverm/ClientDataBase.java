@@ -4,20 +4,15 @@ import java.util.ArrayList;
 
 public class ClientDataBase
 {
-    //server side data base
     private static final String URL="jdbc:sqlite:clients.db";
-    private static Connection connection;
+
+    private static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL);
+    }
+
 
     public static void connect()
     {
-        try
-        {
-            connection=DriverManager.getConnection(URL);
-
-        }catch(SQLException e)
-        {
-            e.printStackTrace();
-        }
         createClientTable();
     }
 
@@ -30,7 +25,7 @@ public class ClientDataBase
                 password TEXT NOT NULL
             );
             """;
-        try (Statement stmt = connection.createStatement()) {
+        try (Connection connection=getConnection();Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
         }
         catch(SQLException e)
@@ -43,7 +38,7 @@ public class ClientDataBase
     {
         String sql="SELECT 1 FROM users WHERE username = ?";
 
-        try(PreparedStatement ps=connection.prepareStatement(sql))
+        try(Connection connection=getConnection();PreparedStatement ps=connection.prepareStatement(sql))
         {
             ps.setString(1,username);
             ResultSet rs=ps.executeQuery();
@@ -56,7 +51,7 @@ public class ClientDataBase
     public static boolean validateUser(String username,String password)throws SQLException
     {
         String sql="SELECT password FROM users WHERE username = ?";
-        try(PreparedStatement ps=connection.prepareStatement(sql))
+        try(Connection connection=getConnection();PreparedStatement ps=connection.prepareStatement(sql))
         {
             ps.setString(1,username);
             ResultSet rs=ps.executeQuery();
@@ -74,7 +69,7 @@ public class ClientDataBase
     public static void addUser(String username,String password)
     {
         String sql="INSERT INTO users (username, password) VALUES (?, ?)";
-        try(PreparedStatement ps=connection.prepareStatement(sql))
+        try(Connection connection=getConnection();PreparedStatement ps=connection.prepareStatement(sql))
         {
             ps.setString(1,username);
             ps.setString(2,password);
@@ -87,26 +82,12 @@ public class ClientDataBase
 
     }
 
-    public static void close()
-    {
-        try
-        {
-            if(connection!=null)
-            {
-                connection.close();
-            }
-        }
-        catch (SQLException e)
-        {
-            e.printStackTrace();
-        }
-    }
 
     public static ArrayList<String>sendClientList()
     {
         ArrayList<String>clientList=new ArrayList<>();
         String sql="SELECT username FROM users";
-        try(Statement statement=connection.createStatement())
+        try(Connection connection=getConnection();Statement statement=connection.createStatement())
         {
             ResultSet rs=statement.executeQuery(sql);
             while(rs.next())
