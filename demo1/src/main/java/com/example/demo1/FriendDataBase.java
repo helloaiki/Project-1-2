@@ -5,7 +5,15 @@ import java.util.ArrayList;
 
 public class FriendDataBase
 {
-    private static final String URL = "jdbc:sqlite:client_data.db";
+    private static String userName;
+    private static String URL;
+
+    public static void initialize(String user)
+    {
+        userName = user;
+        URL = "jdbc:sqlite:" + user + "_data.db";
+        createTable();
+    }
 
     private static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL);
@@ -147,4 +155,3 @@ public class FriendDataBase
     }
 
 }
-
